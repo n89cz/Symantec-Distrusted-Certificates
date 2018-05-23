@@ -4,8 +4,7 @@
 #
 
 # TODO:
-
-. /shared/linux/log.sh
+# logging
 
 BASE=/shared/temp/md162/symantec_certificates
 BLACKLIST="symantec_blacklist.txt"
@@ -14,44 +13,35 @@ CRT_D=/data/web/certs
 TMP_LIST="crt.list"
 TMP_DIR=$BASE/tmp/$HOSTNAME
 WANTED_LIST=$TMP_DIR/wanted.list
-LOGPRF=$BASE/log/$HOSTNAME/log
 APP_PID=$$
 MATCH_COUNT=0
 
-loginit
 
-log "Script started with PID $APP_PID"
 
 # check parameters count
 if [ "$#" -ne 0 ] ; then
-    log "Wrong script usage"
-    log "Script accept no parameters"
-    log "Exiting, bye"
     exit 1
 fi
 
 mkdir -p $TMP_DIR
 
 symantec_not_found() {
-log "No Symantec certificates found"
+
 }
 
 symantec_found() {
-log "We have found $MATCH_COUNT Symantec certificate(s)"
+
 }
 
 send_email() {
-log "Sending email with Symantec certificates list"
-cat $WANTED_LIST | mail -s "Symantec certificate(s) found" -r "$HOSTNAME@wedos.net" list-server@wedos.com
+cat $WANTED_LIST | mail -s "Symantec certificate(s) found" -r "admin@n89.cz" admin@n89.cz
 }
 
 clean_temp_files() {
-log "Removing temporary files"
-rm -r $TMP_DIR || log "Unable to remove $TMP_DIR folder"
+rm -r $TMP_DIR
 }
 
 # here we find all .crt in CRT_D on current server and store them in TMP_LIST
-log "Looking for certificates"
 find $CRT_D -name "*.crt" >> $TMP_DIR/$TMP_LIST
 
 # read all distrusted ($BLACKLIST) certificates line by line and compare them with our certificates OUR_CRT
@@ -77,16 +67,13 @@ done < "$BLACKLIST"
 if [ $MATCH_COUNT -eq 0 ] ; then
     symantec_not_found
     clean_temp_files
-    log "Exiting, bye"
     exit 0
 elif [ $MATCH_COUNT -gt 0 ] ; then
     symantec_found
     send_email
     clean_temp_files
-    log "Exiting, bye"
     exit 0
 else
-    log "Error occurred :-("
-    log "MATCH_COUNT VALUE: $MATCH_COUNT"
+    echo "Error occurred :-("
     exit 1
 fi
